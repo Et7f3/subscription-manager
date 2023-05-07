@@ -1,0 +1,66 @@
+Description: <short summary of the patch>
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ subscription-manager (1.25.1-2) unstable; urgency=medium
+ .
+   * Change the path to rhsmd in /etc/cron.daily/rhsmd
+Author: Bernhard Suttner <suttner@atix.de>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2023-05-07
+
+--- subscription-manager-1.25.1.orig/Makefile
++++ subscription-manager-1.25.1/Makefile
+@@ -13,7 +13,7 @@
+ #   just the fastest or easiest way.
+ 
+ SHELL := /bin/bash
+-PYTHON ?= python
++PYTHON ?= python3
+ DESTDIR ?= /
+ PREFIX ?= /usr/local
+ SYSCONF ?= etc
+@@ -22,9 +22,9 @@ OS_DIST ?= $(shell rpm --eval='%dist')
+ OS = $(shell test -f /etc/os-release && source /etc/os-release; echo $$ID)
+ OS_DIST ?= $(shell rpm --eval='%dist')
+ 
+-PYTHON_VER ?= $(shell $(PYTHON) -c 'import sys; print("python%s.%s" % sys.version_info[:2])')
++PYTHON_VER ?= $(shell $(PYTHON) -c 'import sys; print("python%s" % sys.version_info[:1])')
+ 
+-PYTHON_SITELIB ?= $(PREFIX)/lib64/$(PYTHON_VER)/site-packages
++PYTHON_SITELIB ?= $(PREFIX)/lib/python3/dist-packages
+ DNF_PLUGIN_PYTHON_SITELIB ?= $(PREFIX)/lib/$(PYTHON_VER)/site-packages
+ # Note the underscore used instead of a hyphen
+ PYTHON_INST_DIR = $(PYTHON_SITELIB)/subscription_manager
+@@ -303,7 +303,7 @@ install-post-boot: install-firstboot install-initial-setup
+ install-via-setup: install-subpackages-via-setup
+ 	$(PYTHON) ./setup.py install --root $(DESTDIR) --gtk-version=$(GTK_VERSION) --rpm-version=$(VERSION) --prefix=$(PREFIX) \
+ 	--with-systemd=$(WITH_SYSTEMD) --with-subman-gui=${WITH_SUBMAN_GUI} --with-cockpit-desktop-entry=${WITH_COCKPIT} \
+-	$(SETUP_PY_INSTALL_PARAMS)
++	$(SETUP_PY_INSTALL_PARAMS)  --install-layout=deb
+ 	mkdir -p $(DESTDIR)/$(PREFIX)/sbin/
+ 	mkdir -p $(DESTDIR)/$(LIBEXEC_DIR)/
+ 	mv $(DESTDIR)/$(PREFIX)/bin/subscription-manager $(DESTDIR)/$(PREFIX)/sbin/
+@@ -328,7 +328,7 @@ install-subpackages-via-setup:
+ 	for subpackage in $(SUBPACKAGES); \
+ 	do \
+ 	    pushd $$subpackage; \
+-	    $(PYTHON) ./setup.py install --root=$(DESTDIR) --prefix=$(PREFIX); \
++	    $(PYTHON) ./setup.py install --root=$(DESTDIR) --prefix=$(PREFIX) --install-layout=deb; \
+ 		popd; \
+ 	done;
+ 
